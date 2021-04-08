@@ -9,7 +9,7 @@ class Bluetooth {
 
   //BT connection controller
   bool connectionMethod() {
-    connection = false;
+    connection = true; //data için true kabul ettim
     //bağlantının durumunu return edecek
     return connection;
   }

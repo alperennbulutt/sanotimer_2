@@ -22,22 +22,22 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String data;
 
-  Bluetooth bluetooth = new Bluetooth(false, "");
+  Bluetooth bluetooth =
+      new Bluetooth(false, ""); //false da olsa true, true da olsa true mu?
   // LocalStorage localStorage = new LocalStorage();
   final textController = TextEditingController();
 
   // Initializing the Bluetooth connection state to be unknown
   BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
-  // Initializing a global key, as it would help us in showing a SnackBar later
-  //final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   // Get the instance of the Bluetooth
   FlutterBluetoothSerial _bluetooth = FlutterBluetoothSerial.instance;
   // Track the Bluetooth connection with the remote device
-  BluetoothConnection btConnection;
+  BluetoothConnection blueConn;
 
   bool isDisconnecting = false;
   // To track whether the device is still connected to Bluetooth
-  bool get isConnected => btConnection != null && btConnection.isConnected;
+  bool get isConnected => blueConn != null && blueConn.isConnected;
 
   // Define some variables, which will be required later
   List<BluetoothDevice> _devicesList = [];
@@ -80,8 +80,8 @@ class _MyAppState extends State<MyApp> {
     // Avoid memory leak and disconnect
     if (isConnected) {
       isDisconnecting = true;
-      btConnection.dispose();
-      btConnection = null;
+      blueConn.dispose();
+      blueConn = null;
     }
     super.dispose();
   }
@@ -160,7 +160,7 @@ class _MyAppState extends State<MyApp> {
                   width: 200,
                   height: 50,
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: _connected ? disconnect : connect,
                     icon: (_connected
                         ? Icon(Icons.bluetooth_connected)
                         : Icon(Icons.bluetooth_disabled)),
@@ -188,7 +188,7 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 150),
+            padding: const EdgeInsets.only(top: 20),
             child: TextField(
               controller: textController,
               decoration: InputDecoration(
@@ -202,7 +202,7 @@ class _MyAppState extends State<MyApp> {
               //Veri yolla button
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(10.0),
                   child: ElevatedButton(
                       onPressed: () {
                         data = textController.text;
@@ -216,13 +216,13 @@ class _MyAppState extends State<MyApp> {
               //Bt bağlan button
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(10.0),
                   child: ElevatedButton(
-                      onPressed: () {
-                        data = textController.text;
-                        bluetooth.sendData("{o,$data}");
-                      },
-                      child: Text("BT Bağlan")),
+                      onPressed: _connected
+                          ? dataSend
+                          : alert, //yada null veya connect fonksiyonu
+                      child: Text(
+                          "BT Gönder")), //bağlıysa gönder değilse önce bağlan 2.ye gönder
                 ),
               ),
             ],
@@ -257,12 +257,12 @@ class _MyAppState extends State<MyApp> {
         await BluetoothConnection.toAddress(_device.address)
             .then((_connection) {
           print('Cihaz Bağlandı!');
-          btConnection = _connection;
+          blueConn = _connection;
           setState(() {
             _connected = true;
           });
           show('Cihaz Bağlandı!');
-          btConnection.input.listen(null).onDone(() {
+          blueConn.input.listen(null).onDone(() {
             if (isDisconnecting) {
               print('Disconnecting locally!');
             } else {
@@ -286,13 +286,40 @@ class _MyAppState extends State<MyApp> {
 
   // Method to disconnect bluetooth
   void disconnect() async {
-    await btConnection.close();
+    await blueConn.close();
     show('Uygulama Bağlantısı Kesildi !'); //bt kapatılınca
-    if (!btConnection.isConnected) {
+    if (!blueConn.isConnected) {
       setState(() {
         _connected = false;
       });
     }
+  }
+
+  void dataSend() async {
+    data = textController.text;
+    bluetooth.sendData("{o,$data}");
+    show("veriniz yollandı,yollanan veri : "+'$data');
+  }
+
+  void alert() async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Bağlı Değilsiniz!'),
+          content: Text(
+              'Göndermek istenilen "$data", Karakter Sayısı = ${data.characters.length}'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Tamam'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Method to show a Snackbar,
