@@ -1,3 +1,5 @@
+import 'package:sanotimer2_5/local_storage.dart';
+
 class Bluetooth {
   String data;
   bool connection;
@@ -22,13 +24,23 @@ class Bluetooth {
 
   //this method sends any data
   String sendData(String data) {
+    LocalStorage localStorage = new LocalStorage();
+
     bool btConnection = connectionMethod();
     if (btConnection == true) {
       print("veriniz yollandı,yollanan veri :  " + data);
+      localStorage.saveData(data);
     } else
       print("veriniz yollanamadı");
 
     //when bt connection is true this send data
     return data;
+  }
+
+  Future<String> getData() {
+    LocalStorage localStorage = new LocalStorage();
+
+    var mesaj = localStorage.getData();
+    return mesaj;
   }
 }

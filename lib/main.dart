@@ -4,6 +4,11 @@ import 'package:flutter/cupertino.dart';
 //import 'package:sanotimer2/local_storage.dart';
 import 'package:sanotimer2_5/bt_connection.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:sanotimer2_5/local_storage.dart';
+import 'package:sanotimer2_5/send_data.dart';
+
+import 'bt_connection.dart';
+import 'bt_connection.dart';
 
 void main() {
   runApp(
@@ -21,11 +26,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String data;
+  String getMesaj;
 
   Bluetooth bluetooth =
       new Bluetooth(false, ""); //false da olsa true, true da olsa true mu?
   // LocalStorage localStorage = new LocalStorage();
   final textController = TextEditingController();
+  LocalStorage localStorage = new LocalStorage();
 
   // Initializing the Bluetooth connection state to be unknown
   BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
@@ -45,8 +52,14 @@ class _MyAppState extends State<MyApp> {
   bool _connected = false;
   // bool _isButtonUnavailable = false;
 
+  void degerAl() async {
+    getMesaj = await localStorage.getData();
+    setState(() {});
+  }
+
   @override
   void initState() {
+    degerAl();
     super.initState();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -193,7 +206,7 @@ class _MyAppState extends State<MyApp> {
               controller: textController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Dakika : ',
+                labelText: 'Dakika:$getMesaj',
               ),
             ),
           ),
@@ -206,9 +219,7 @@ class _MyAppState extends State<MyApp> {
                   child: ElevatedButton(
                       onPressed: () {
                         data = textController.text;
-                        //localHafiza.savaData(data);
-                        // localStorage.saveData("{o,$data}");
-                        //bluetooth.sendData(data);
+                        sendData(data);
                       },
                       child: Text("Kaydet")),
                 ),
@@ -298,7 +309,7 @@ class _MyAppState extends State<MyApp> {
   void dataSend() async {
     data = textController.text;
     bluetooth.sendData("{o,$data}");
-    show("veriniz yollandı,yollanan veri : "+'$data');
+    show("veriniz yollandı,yollanan veri : " + '$data');
   }
 
   void alert() async {
