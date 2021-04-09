@@ -6,8 +6,6 @@ import 'package:sanotimer2_5/bt_connection.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:sanotimer2_5/local_storage.dart';
 import 'package:sanotimer2_5/send_data.dart';
-
-import 'bt_connection.dart';
 import 'bt_connection.dart';
 
 void main() {
@@ -220,18 +218,27 @@ class _MyAppState extends State<MyApp> {
                       onPressed: () {
                         data = textController.text;
                         sendData(data);
+                        show("Veriniz kaydedildi");
                       },
                       child: Text("Kaydet")),
                 ),
               ),
-              //Bt bağlan button
+              //Bt gönder button
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: ElevatedButton(
-                      onPressed: _connected
-                          ? dataSend
-                          : alert, //yada null veya connect fonksiyonu
+                      onPressed: () {
+                        if (isConnected == true) {
+                          _sendOnMessageToBluetooth(getMesaj);
+                          show("Cihaza $getMesaj yollandı");
+                          print("gömülü sisteme mevcut mesaj yollandı");
+                        } else {
+                          //print(getMesaj);
+                          show("BT bağlantısını kontrol ediniz.");
+                        }
+                      },
+                      //yada null veya connect fonksiyonu
                       child: Text(
                           "BT Gönder")), //bağlıysa gönder değilse önce bağlan 2.ye gönder
                 ),
@@ -331,6 +338,17 @@ class _MyAppState extends State<MyApp> {
         );
       },
     );
+  }
+
+  void _sendOnMessageToBluetooth(String data) async {
+    var connection;
+    connection.output.add(data);
+
+    await connection.output.allSent;
+    //show('Kanal 1 - AÇIK');
+    // setState(() {
+    //   _deviceState = 1; // device on
+    // });
   }
 
   // Method to show a Snackbar,
