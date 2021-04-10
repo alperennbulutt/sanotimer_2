@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
-//import 'package:sanotimer2/local_storage.dart';
+
 import 'package:sanotimer2_5/bt_connection.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:sanotimer2_5/local_storage.dart';
@@ -26,8 +26,9 @@ class _MyAppState extends State<MyApp> {
   String data;
   String getMesaj;
 
-  Bluetooth bluetooth =
-      new Bluetooth(false, ""); //false da olsa true, true da olsa true mu?
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
+  Bluetooth bluetooth = new Bluetooth(false, "");
   // LocalStorage localStorage = new LocalStorage();
   final textController = TextEditingController();
   LocalStorage localStorage = new LocalStorage();
@@ -117,19 +118,16 @@ class _MyAppState extends State<MyApp> {
   // in a list.
   Future<void> getPairedDevices() async {
     List<BluetoothDevice> devices = [];
-
     // To get the list of paired devices
     try {
       devices = await _bluetooth.getBondedDevices();
     } on PlatformException {
       print("Beklenmeyen Hata!");
     }
-
     // It is an error to call [setState] unless [mounted] is true.
     if (!mounted) {
       return;
     }
-
     // Store the [devices] list in the [_devicesList] for accessing
     // the list outside this class
     setState(() {
@@ -140,112 +138,157 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(25.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  'Cihaz Seç >>',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                DropdownButton(
-                  items: _getDeviceItems(),
-                  onChanged: (value) => setState(() => _device = value),
-                  value: _devicesList.isNotEmpty ? _device : null,
-                ),
-              ],
-            ),
+      key: _scaffoldKey,
+      appBar: AppBar(
+        toolbarHeight: 55,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(45),
+            bottomRight: Radius.circular(45),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                SizedBox(
-                  width: 200,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _connected ? disconnect : connect,
-                    icon: (_connected
-                        ? Icon(Icons.bluetooth_connected)
-                        : Icon(Icons.bluetooth_disabled)),
-                    label: Text(
-                      _connected ? 'Bağlantıyı Kes' : 'Bağlan',
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: (_connected
+        ),
+        title: Text("..:: SanoTimer ::.."),
+        centerTitle: true,
+        backgroundColor: Colors.red.shade400,
+        actions: <Widget>[
+          FlatButton.icon(
+            icon: Icon(
+              Icons.refresh,
+              color: Colors.white,
+            ),
+            label: Text(
+              "",
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            splashColor: Colors.blue.shade300,
+            onPressed: () async {
+              await getPairedDevices().then((_) {
+                show('Cihaz Listesi Yenilendi!');
+              });
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            Visibility(
+              visible: _bluetoothState == BluetoothState.STATE_TURNING_ON,
+              child: LinearProgressIndicator(
+                backgroundColor: Colors.deepPurpleAccent.shade100,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    'Cihaz Seç >>',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  DropdownButton(
+                    items: _getDeviceItems(),
+                    onChanged: (value) => setState(() => _device = value),
+                    value: _devicesList.isNotEmpty ? _device : null,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(
+                    width: 200,
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      onPressed: _connected ? disconnect : connect,
+                      icon: (_connected
+                          ? Icon(Icons.bluetooth_connected)
+                          : Icon(Icons.bluetooth_disabled)),
+                      label: Text(
+                        _connected ? 'Bağlantıyı Kes' : 'Bağlan',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: (_connected
+                              ? Colors.lightGreenAccent.shade400
+                              : Colors.white),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        primary: (_connected
+                            ? Colors.blue.shade300
+                            : Colors.red.shade400),
+                        onPrimary: (_connected
                             ? Colors.lightGreenAccent.shade400
                             : Colors.white),
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    style: ElevatedButton.styleFrom(
-                      primary: (_connected
-                          ? Colors.blue.shade300
-                          : Colors.red.shade400),
-                      onPrimary: (_connected
-                          ? Colors.lightGreenAccent.shade400
-                          : Colors.white),
-                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: TextField(
+                controller: textController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Gönderilecek Komut: $getMesaj',
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                //Veri yolla button
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: ElevatedButton(
+                        onPressed: () {
+                          data = textController.text;
+                          sendData(data);
+                          show(
+                              "Veriniz kaydedildi : $getMesaj, uygulama yeniden açıldığında gönderilecek !");
+                        },
+                        child: Text("Kaydet")),
+                  ),
+                ),
+                //Bt gönder button
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: ElevatedButton(
+                        onPressed: () {
+                          if (isConnected == true) {
+                            _sendOnMessageToBluetooth(getMesaj);
+                            show("Cihaza >$getMesaj< yollandı!");
+                            print("gömülü sisteme mevcut mesaj yollandı");
+                          } else {
+                            //print(getMesaj);
+                            show("BT bağlantısını kontrol ediniz !!!");
+                          }
+                        },
+                        child: Text("BT Gönder")),
                   ),
                 ),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: TextField(
-              controller: textController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Dakika:$getMesaj',
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              //Veri yolla button
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: ElevatedButton(
-                      onPressed: () {
-                        data = textController.text;
-                        sendData(data);
-                        show("Veriniz kaydedildi");
-                      },
-                      child: Text("Kaydet")),
-                ),
-              ),
-              //Bt gönder button
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: ElevatedButton(
-                      onPressed: () {
-                        if (isConnected == true) {
-                          _sendOnMessageToBluetooth(getMesaj);
-                          show("Cihaza $getMesaj yollandı");
-                          print("gömülü sisteme mevcut mesaj yollandı");
-                        } else {
-                          //print(getMesaj);
-                          show("BT bağlantısını kontrol ediniz.");
-                        }
-                      },
-                      //yada null veya connect fonksiyonu
-                      child: Text(
-                          "BT Gönder")), //bağlıysa gönder değilse önce bağlan 2.ye gönder
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -254,7 +297,7 @@ class _MyAppState extends State<MyApp> {
     List<DropdownMenuItem<BluetoothDevice>> items = [];
     if (_devicesList.isEmpty) {
       items.add(DropdownMenuItem(
-        child: Text('Cihaz YOK'),
+        child: Text('CİHAZ YOK / BT KAPALI !'),
       ));
     } else {
       _devicesList.forEach((device) {
@@ -269,7 +312,7 @@ class _MyAppState extends State<MyApp> {
 
   void connect() async {
     if (_device == null) {
-      show('!!! Cihaz Seçilmedi !!! - Uygulamayı Tekrar Açınız!');
+      show('!!! Cihaz Seçilmedi !!!');
     } else {
       if (!isConnected) {
         await BluetoothConnection.toAddress(_device.address)
@@ -290,7 +333,7 @@ class _MyAppState extends State<MyApp> {
               setState(() {
                 _connected = false;
               });
-              show('Cihaz Bağlantısı Kayboldu !'); //bağlanılan cihazdan
+              show('Cihaz Bağlantısı Kesildi !'); //bağlanılan cihazdan
             }
           });
         }).catchError((error) {
@@ -305,39 +348,12 @@ class _MyAppState extends State<MyApp> {
   // Method to disconnect bluetooth
   void disconnect() async {
     await blueConn.close();
-    show('Uygulama Bağlantısı Kesildi !'); //bt kapatılınca
+    //show('Uygulama Bağlantısı Kesildi !'); //bt kapatılınca
     if (!blueConn.isConnected) {
       setState(() {
         _connected = false;
       });
     }
-  }
-
-  void dataSend() async {
-    data = textController.text;
-    bluetooth.sendData("{o,$data}");
-    show("veriniz yollandı,yollanan veri : " + '$data');
-  }
-
-  void alert() async {
-    await showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Bağlı Değilsiniz!'),
-          content: Text(
-              'Göndermek istenilen "$data", Karakter Sayısı = ${data.characters.length}'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Tamam'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _sendOnMessageToBluetooth(String data) async {
