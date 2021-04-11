@@ -28,7 +28,7 @@ class Bluetooth {
 
     bool btConnection = connectionMethod();
     if (btConnection == true) {
-      print("veriniz yollandı,yollanan veri :  " + data);
+      // print("veriniz yollandı,yollanan veri :  " + data);
       localStorage.saveData(data);
     } else
       print("veriniz yollanamadı");

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
-
+import 'dart:async';
 import 'package:sanotimer2_5/bt_connection.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:sanotimer2_5/local_storage.dart';
@@ -25,7 +25,14 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String data;
   String getMesaj;
-
+  /* final ButtonStyle flatButtonStyle = TextButton.styleFrom(
+    primary: Colors.black87,
+    minimumSize: Size(88, 36),
+    padding: EdgeInsets.symmetric(horizontal: 16.0),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(2.0)),
+    ),
+  );*/
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   Bluetooth bluetooth = new Bluetooth(false, "");
@@ -151,21 +158,25 @@ class _MyAppState extends State<MyApp> {
         centerTitle: true,
         backgroundColor: Colors.red.shade400,
         actions: <Widget>[
-          FlatButton.icon(
+          TextButton.icon(
             icon: Icon(
               Icons.refresh,
               color: Colors.white,
             ),
             label: Text(
               "",
-              style: TextStyle(
-                color: Colors.white,
-              ),
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+            style: ButtonStyle(
+              overlayColor: MaterialStateProperty.resolveWith<Color>(
+                  (Set<MaterialState> states) {
+                if (states.contains(MaterialState.focused)) return Colors.amber;
+                if (states.contains(MaterialState.hovered))
+                  return Colors.red.shade400;
+                if (states.contains(MaterialState.pressed))
+                  return Colors.blue.shade300;
+                return null; // Defer to the widget's default.
+              }),
             ),
-            splashColor: Colors.blue.shade300,
             onPressed: () async {
               await getPairedDevices().then((_) {
                 show('Cihaz Listesi Yenilendi!');
@@ -181,8 +192,8 @@ class _MyAppState extends State<MyApp> {
             Visibility(
               visible: _bluetoothState == BluetoothState.STATE_TURNING_ON,
               child: LinearProgressIndicator(
-                backgroundColor: Colors.deepPurpleAccent.shade100,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+                backgroundColor: Colors.blue.shade300,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
               ),
             ),
             Padding(
@@ -247,7 +258,7 @@ class _MyAppState extends State<MyApp> {
                 controller: textController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Gönderilecek Komut: $getMesaj',
+                  labelText: 'Hafızadaki Komut: $getMesaj',
                 ),
               ),
             ),
@@ -259,12 +270,20 @@ class _MyAppState extends State<MyApp> {
                     padding: const EdgeInsets.all(5.0),
                     child: ElevatedButton(
                         onPressed: () {
-                          data = textController.text;
-                          sendData(data);
-                          show(
-                              "Veriniz kaydedildi : $getMesaj, uygulama yeniden açıldığında gönderilecek !");
+                          if (isConnected == true) {
+                            data = textController.text;
+                            _sendOnMessageToBluetooth("{$data}");
+                            show("Cihaza > {$data} < yollandı!");
+                            print(
+                                "gömülü sisteme mevcut mesaj yollandı:{$data}");
+                          } else {
+                            data = textController.text;
+                            sendData(data);
+                            show(
+                                "Hafızadaki Veriniz : $getMesaj, Kaydedilen veriniz uygulama yeniden açıldığında gönderilecek !");
+                          }
                         },
-                        child: Text("Kaydet")),
+                        child: Text("Anlık Gönder&Kaydet")),
                   ),
                 ),
                 //Bt gönder button
@@ -274,15 +293,16 @@ class _MyAppState extends State<MyApp> {
                     child: ElevatedButton(
                         onPressed: () {
                           if (isConnected == true) {
-                            _sendOnMessageToBluetooth(getMesaj);
-                            show("Cihaza >$getMesaj< yollandı!");
-                            print("gömülü sisteme mevcut mesaj yollandı");
+                            _sendOnMessageToBluetooth("$getMesaj");
+                            show("Cihaza > $getMesaj< yollandı!");
+                            print(
+                                "gömülü sisteme mevcut mesaj yollandı:$getMesaj");
                           } else {
                             //print(getMesaj);
-                            show("BT bağlantısını kontrol ediniz !!!");
+                            show("Bluetooth bağlantısını kontrol ediniz !!!");
                           }
                         },
-                        child: Text("BT Gönder")),
+                        child: Text("Hafızadan Gönder")),
                   ),
                 ),
               ],
@@ -361,11 +381,17 @@ class _MyAppState extends State<MyApp> {
     connection.output.add(data);
 
     await connection.output.allSent;
-    //show('Kanal 1 - AÇIK');
+    //show('$data');
     // setState(() {
     //   _deviceState = 1; // device on
     // });
   }
+
+  /*void dataSend() async {
+    data = textController.text;
+    bluetooth.sendData("{o,$data}");
+    show("veriniz yollandı,yollanan veri : " + '$data');
+  }*/
 
   // Method to show a Snackbar,
   // taking message as the text
