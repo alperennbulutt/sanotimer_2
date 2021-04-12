@@ -1,12 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:async';
-import 'package:sanotimer2_5/bt_connection.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:sanotimer2_5/local_storage.dart';
 import 'package:sanotimer2_5/send_data.dart';
-import 'bt_connection.dart';
 
 void main() {
   runApp(
@@ -35,7 +35,6 @@ class _MyAppState extends State<MyApp> {
   );*/
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
-  Bluetooth bluetooth = new Bluetooth(false, "");
   // LocalStorage localStorage = new LocalStorage();
   final textController = TextEditingController();
   LocalStorage localStorage = new LocalStorage();
@@ -370,20 +369,13 @@ class _MyAppState extends State<MyApp> {
 
   void _sendOnMessageToBluetooth(String data) async {
     var connection;
-    connection.output.add(data);
-
+    connection.output.add(utf8.encode("{$data}" + "\r\n"));
     await connection.output.allSent;
     //show('$data');
     // setState(() {
     //   _deviceState = 1; // device on
     // });
   }
-
-  /*void dataSend() async {
-    data = textController.text;
-    bluetooth.sendData("{o,$data}");
-    show("veriniz yollandı,yollanan veri : " + '$data');
-  }*/
 
   // Method to show a Snackbar,
   // taking message as the text

@@ -30,6 +30,7 @@ class LocalStorage {
   Future<String> getData() async {
     final pref = await SharedPreferences.getInstance();
     String mesaj = pref.getString(gelenMesaj);
+    print("get edilen mesaj degeri : {$mesaj}");
 
     if (mesaj == null) {
       return '';
