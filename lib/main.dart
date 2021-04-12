@@ -270,20 +270,12 @@ class _MyAppState extends State<MyApp> {
                     padding: const EdgeInsets.all(5.0),
                     child: ElevatedButton(
                         onPressed: () {
-                          if (isConnected == true) {
-                            data = textController.text;
-                            _sendOnMessageToBluetooth("{$data}");
-                            show("Cihaza > {$data} < yollandı!");
-                            print(
-                                "gömülü sisteme mevcut mesaj yollandı:{$data}");
-                          } else {
-                            data = textController.text;
-                            sendData(data);
-                            show(
-                                "Hafızadaki Veriniz : $getMesaj, Kaydedilen veriniz uygulama yeniden açıldığında gönderilecek !");
-                          }
+                          data = textController.text;
+                          sendData(data);
+                          show(
+                              "Hafızadaki Veriniz : $getMesaj, Kaydedilen veriniz uygulama yeniden açıldığında gönderilecek !");
                         },
-                        child: Text("Anlık Gönder&Kaydet")),
+                        child: Text("Kaydet")),
                   ),
                 ),
                 //Bt gönder button
@@ -293,16 +285,16 @@ class _MyAppState extends State<MyApp> {
                     child: ElevatedButton(
                         onPressed: () {
                           if (isConnected == true) {
-                            _sendOnMessageToBluetooth("$getMesaj");
-                            show("Cihaza > $getMesaj< yollandı!");
+                            _sendOnMessageToBluetooth(getMesaj);
+                            show("Cihaza > $getMesaj < yollandı!");
                             print(
-                                "gömülü sisteme mevcut mesaj yollandı:$getMesaj");
+                                "gömülü sisteme mevcut mesaj yollandı: {$getMesaj}");
                           } else {
                             //print(getMesaj);
                             show("Bluetooth bağlantısını kontrol ediniz !!!");
                           }
                         },
-                        child: Text("Hafızadan Gönder")),
+                        child: Text("Gönder")),
                   ),
                 ),
               ],

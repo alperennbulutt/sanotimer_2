@@ -14,7 +14,7 @@ class LocalStorage {
     var message = pref.setString(gelenMesaj, mesaj);
     // var deger = pref.setInt('degerim', gelenDeger);
 
-    print("Save edilen mesaj : $mesaj");
+    print("Save edilen mesaj : {$mesaj}");
     return message;
   }
 
@@ -34,7 +34,7 @@ class LocalStorage {
     if (mesaj == null) {
       return '';
     }
-    print("get edilen mesaj degeri " + mesaj);
+    print("get edilen mesaj degeri : {$mesaj}");
 
     return mesaj;
   }
