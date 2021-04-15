@@ -418,9 +418,9 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _sendOnMessageToBluetooth(String data) async {
-    var connection;
-    connection.output.add(utf8.encode("{$data}" + "\r\n"));
-    await connection.output.allSent;
+    
+    blueConn.output.add(utf8.encode("{$data}" + "\r\n"));
+    await blueConn.output.allSent;
     //show('$data');
     // setState(() {
     //   _deviceState = 1; // device on
