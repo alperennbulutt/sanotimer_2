@@ -1,9 +1,11 @@
 import 'dart:convert';
-
+// ignore: unused_import
+import 'dart:typed_data';
+import 'package:sanotimer2_5/receive_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
-import 'dart:async';
+//import 'dart:async';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:sanotimer2_5/local_storage.dart';
 import 'package:sanotimer2_5/send_data.dart';
@@ -22,7 +24,15 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
+class _Message {
+  int whom;
+  String text;
+
+  _Message(this.whom, this.text);
+}
+
 class _MyAppState extends State<MyApp> {
+  // static final clientID = 0;
   String data;
   String getMesaj;
   /* final ButtonStyle flatButtonStyle = TextButton.styleFrom(
@@ -33,6 +43,14 @@ class _MyAppState extends State<MyApp> {
       borderRadius: BorderRadius.all(Radius.circular(2.0)),
     ),
   );*/
+
+  List<_Message> messages = <_Message>[];
+  //String _messageBuffer = '';
+
+  final TextEditingController textEditingController =
+      new TextEditingController();
+  final ScrollController listScrollController = new ScrollController();
+
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   // LocalStorage localStorage = new LocalStorage();
@@ -55,6 +73,8 @@ class _MyAppState extends State<MyApp> {
   List<BluetoothDevice> _devicesList = [];
   BluetoothDevice _device;
   bool _connected = false;
+
+  // BluetoothDevice get server => null;
   // bool _isButtonUnavailable = false;
 
   void degerAl() async {
@@ -66,6 +86,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     degerAl();
     super.initState();
+    //onDataReceived();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -144,50 +165,49 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        toolbarHeight: 55,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(45),
-            bottomRight: Radius.circular(45),
+        key: _scaffoldKey,
+        appBar: AppBar(
+          toolbarHeight: 55,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(45),
+              bottomRight: Radius.circular(45),
+            ),
           ),
+          title: Text("..:: SanoTimer ::.."),
+          centerTitle: true,
+          backgroundColor: Colors.red.shade400,
+          actions: <Widget>[
+            TextButton.icon(
+              icon: Icon(
+                Icons.refresh,
+                color: Colors.white,
+              ),
+              label: Text(
+                "",
+              ),
+              style: ButtonStyle(
+                overlayColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.focused))
+                    return Colors.amber;
+                  if (states.contains(MaterialState.hovered))
+                    return Colors.red.shade400;
+                  if (states.contains(MaterialState.pressed))
+                    return Colors.blue.shade300;
+                  return null; // Defer to the widget's default.
+                }),
+              ),
+              onPressed: () async {
+                await getPairedDevices().then((_) {
+                  show('Cihaz Listesi Yenilendi!');
+                });
+              },
+            ),
+          ],
         ),
-        title: Text("..:: SanoTimer ::.."),
-        centerTitle: true,
-        backgroundColor: Colors.red.shade400,
-        actions: <Widget>[
-          TextButton.icon(
-            icon: Icon(
-              Icons.refresh,
-              color: Colors.white,
-            ),
-            label: Text(
-              "",
-            ),
-            style: ButtonStyle(
-              overlayColor: MaterialStateProperty.resolveWith<Color>(
-                  (Set<MaterialState> states) {
-                if (states.contains(MaterialState.focused)) return Colors.amber;
-                if (states.contains(MaterialState.hovered))
-                  return Colors.red.shade400;
-                if (states.contains(MaterialState.pressed))
-                  return Colors.blue.shade300;
-                return null; // Defer to the widget's default.
-              }),
-            ),
-            onPressed: () async {
-              await getPairedDevices().then((_) {
-                show('Cihaz Listesi Yenilendi!');
-              });
-            },
-          ),
-        ],
-      ),
-      body: Container(
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
+        body: Container(
+          child: Column(mainAxisSize: MainAxisSize.max, children: <Widget>[
             Visibility(
               visible: _bluetoothState == BluetoothState.STATE_TURNING_ON,
               child: LinearProgressIndicator(
@@ -257,7 +277,7 @@ class _MyAppState extends State<MyApp> {
                 controller: textController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Hafızadaki Komut: $getMesaj',
+                  labelText: 'Hafızadaki Komut: {$getMesaj}',
                 ),
               ),
             ),
@@ -272,7 +292,7 @@ class _MyAppState extends State<MyApp> {
                           data = textController.text;
                           sendData(data);
                           show(
-                              "Hafızadaki Veriniz : $getMesaj, Kaydedilen veriniz uygulama yeniden açıldığında gönderilecek !");
+                              "Hafızadaki Veriniz : {$getMesaj}, Kaydedilen veriniz uygulama yeniden açıldığında gönderilecek !");
                         },
                         child: Text("Kaydet")),
                   ),
@@ -285,7 +305,7 @@ class _MyAppState extends State<MyApp> {
                         onPressed: () {
                           if (isConnected == true) {
                             _sendOnMessageToBluetooth(getMesaj);
-                            show("Cihaza > $getMesaj < yollandı!");
+                            show("Cihaza > {$getMesaj} < yollandı!");
                             print(
                                 "gömülü sisteme mevcut mesaj yollandı: {$getMesaj}");
                           } else {
@@ -296,12 +316,42 @@ class _MyAppState extends State<MyApp> {
                         child: Text("Gönder")),
                   ),
                 ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      BackData(server: _device)));
+                        },
+                        child: Text("Veri Al")),
+                  ),
+                ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+            Row(
+              children: <Widget>[
+                Flexible(
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 16.0),
+                    child: TextField(
+                      style: const TextStyle(fontSize: 15.0),
+                      controller: textEditingController,
+                      decoration: InputDecoration.collapsed(
+                        hintText: 'Gelen Veriler',
+                        hintStyle: const TextStyle(color: Colors.grey),
+                      ),
+                      // enabled: isConnected,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ]),
+        ));
   }
 
   List<DropdownMenuItem<BluetoothDevice>> _getDeviceItems() {
@@ -377,6 +427,62 @@ class _MyAppState extends State<MyApp> {
     // });
   }
 
+  // ignore: unused_element
+  void _dataReceiver(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => BackData()));
+  }
+
+//veri alma
+  void onDataReceived(Uint8List data) {
+    // Allocate buffer for parsed data
+    int backspacesCounter = 0;
+    data.forEach((byte) {
+      if (byte == 8 || byte == 127) {
+        backspacesCounter++;
+      }
+    });
+    Uint8List buffer = Uint8List(data.length - backspacesCounter);
+    int bufferIndex = buffer.length;
+
+    // Apply backspace control character
+    backspacesCounter = 0;
+    for (int i = data.length - 1; i >= 0; i--) {
+      if (data[i] == 8 || data[i] == 127) {
+        backspacesCounter++;
+      } else {
+        if (backspacesCounter > 0) {
+          backspacesCounter--;
+        } else {
+          buffer[--bufferIndex] = data[i];
+        }
+      }
+    }
+  }
+
+/* String dataString = String.fromCharCodes(buffer);
+    int index = buffer.indexOf(13);
+    if (~index != 0) {
+      setState(() {
+        messages.add(
+          _Message(
+            1,
+            backspacesCounter > 0
+                ? _messageBuffer.substring(
+                    0, _messageBuffer.length - backspacesCounter)
+                : _messageBuffer + dataString.substring(0, index),
+          ),
+        );
+        _messageBuffer = dataString.substring(index);
+      });
+    } else {
+      _messageBuffer = (backspacesCounter > 0
+          ? _messageBuffer.substring(
+              0, _messageBuffer.length - backspacesCounter)
+          : _messageBuffer + dataString);
+    }
+  }
+// veri alma son */
   // Method to show a Snackbar,
   // taking message as the text
   Future show(

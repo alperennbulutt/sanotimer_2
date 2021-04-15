@@ -4,7 +4,19 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
+void main() {
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: BackData(),
+    ),
+  );
+}
+
 class BackData extends StatefulWidget {
+  final BluetoothDevice server;
+
+  const BackData({this.server});
   @override
   _BackData createState() => new _BackData();
 }
@@ -31,7 +43,30 @@ class _BackData extends State<BackData> {
   void initState() {
     super.initState();
 
-    connection.input.listen(_onDataReceived).onDone(() {});
+    //BluetoothConnection.toAddress(widget.server.address).then((_connection) {
+    print('Connected to the device');
+    //connection = _connection;
+    setState(() {
+      //isConnecting = false;
+      // isDisconnecting = false;
+    });
+    connection.input.listen(null).onDone(() {});
+    /* connection.input.listen(onDataReceived).onDone(() {
+      // Example: Detect which side closed the connection
+      // There should be `isDisconnecting` flag to show are we are (locally)
+      // in middle of disconnecting process, should be set before calling
+      // `dispose`, `finish` or `close`, which all causes to disconnect.
+      // If we except the disconnection, `onDone` should be fired as result.
+      // If we didn't except this (no flag set), it means closing by remote.
+       if (isDisconnecting) {
+          print('Disconnecting locally!');
+        } else {
+          print('Disconnected remotely!');
+        }
+        if (this.mounted) {
+          setState(() {});
+        }
+    });*/
   }
 
   @override
@@ -61,7 +96,7 @@ class _BackData extends State<BackData> {
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(title: (Text('Cihazınızdan Gelen'))),
+      appBar: AppBar(title: (Text('Cihazdan Gelen'))),
       body: SafeArea(
         child: Column(
           children: <Widget>[
@@ -80,7 +115,7 @@ class _BackData extends State<BackData> {
                       style: const TextStyle(fontSize: 15.0),
                       controller: textEditingController,
                       decoration: InputDecoration.collapsed(
-                        hintText: 'Gelen Veriler',
+                        hintText: 'Komut için >>',
                         hintStyle: const TextStyle(color: Colors.grey),
                       ),
                       // enabled: isConnected,
@@ -103,7 +138,7 @@ class _BackData extends State<BackData> {
     );
   }
 
-  void _onDataReceived(Uint8List data) {
+  void onDataReceived(Uint8List data) {
     // Allocate buffer for parsed data
     int backspacesCounter = 0;
     data.forEach((byte) {
