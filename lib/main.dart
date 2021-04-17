@@ -79,7 +79,6 @@ class _MyAppState extends State<MyApp> {
 
   void degerAl() async {
     getMesaj = await localStorage.getData();
-    setState(() {});
   }
 
   @override
@@ -303,8 +302,10 @@ class _MyAppState extends State<MyApp> {
                     padding: const EdgeInsets.all(5.0),
                     child: ElevatedButton(
                         onPressed: () {
+                          // print(getMesaj);
+
                           if (isConnected == true) {
-                            _sendOnMessageToBluetooth(getMesaj);
+                            _sendOnMessageToBluetooth();
                             show("Cihaza > {$getMesaj} < yollandı!");
                             print(
                                 "gömülü sisteme mevcut mesaj yollandı: {$getMesaj}");
@@ -417,9 +418,10 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  void _sendOnMessageToBluetooth(String data) async {
-    
-    blueConn.output.add(utf8.encode("{$data}" + "\r\n"));
+  void _sendOnMessageToBluetooth() async {
+    var msj = await localStorage.getData();
+    print("sendOnMEssageToBluetooth'a giden veri: " + msj);
+    blueConn.output.add(utf8.encode("{$msj}" + "\r\n"));
     await blueConn.output.allSent;
     //show('$data');
     // setState(() {
