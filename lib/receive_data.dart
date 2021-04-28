@@ -50,7 +50,7 @@ class _BackData extends State<BackData> {
       //isConnecting = false;
       // isDisconnecting = false;
     });
-    //connection.input.listen(null).onDone(() {});
+    connection.input.listen(null).onDone(() {});
     /* connection.input.listen(onDataReceived).onDone(() {
       // Example: Detect which side closed the connection
       // There should be `isDisconnecting` flag to show are we are (locally)

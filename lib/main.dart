@@ -8,7 +8,15 @@ import 'package:flutter/cupertino.dart';
 //import 'dart:async';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:sanotimer2_5/local_storage.dart';
-import 'package:sanotimer2_5/send_data.dart';
+import 'package:sanotimer2_5/view/baslamaZamaniScreen.dart';
+import 'package:sanotimer2_5/view/manuelAyarlamaScreen.dart';
+import 'package:sanotimer2_5/view/sulamaG%C3%BCnleriScreen.dart';
+import 'package:sanotimer2_5/view/sulamaSuresiScreen.dart';
+import 'package:sanotimer2_5/view/tarihZamanSceen.dart';
+import 'package:sanotimer2_5/view/testModuScreen.dart';
+import 'package:sanotimer2_5/widgets/alertDialogs/doubleAlertDialog.dart';
+import 'package:sanotimer2_5/widgets/alertDialogs/singleAlertDialog.dart';
+import 'package:sanotimer2_5/widgets/buttons/homeScreenButton.dart';
 
 void main() {
   runApp(
@@ -73,6 +81,7 @@ class _MyAppState extends State<MyApp> {
   List<BluetoothDevice> _devicesList = [];
   BluetoothDevice _device;
   bool _connected = false;
+  BackData backData = new BackData();
 
   // BluetoothDevice get server => null;
   // bool _isButtonUnavailable = false;
@@ -163,196 +172,120 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final _size = MediaQuery.of(context).size;
     return Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-          toolbarHeight: 55,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(45),
-              bottomRight: Radius.circular(45),
-            ),
+      backgroundColor: Color(0xFFFAF6F2),
+      appBar: AppBar(
+        toolbarHeight: 70,
+        backgroundColor: Color(0xFFEDD3C1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(25),
+            bottomRight: Radius.circular(25),
           ),
-          title: Text("..:: SanoTimer ::.."),
-          centerTitle: true,
-          backgroundColor: Colors.red.shade400,
-          actions: <Widget>[
-            TextButton.icon(
-              icon: Icon(
-                Icons.refresh,
-                color: Colors.white,
-              ),
-              label: Text(
-                "",
-              ),
-              style: ButtonStyle(
-                overlayColor: MaterialStateProperty.resolveWith<Color>(
-                    (Set<MaterialState> states) {
-                  if (states.contains(MaterialState.focused))
-                    return Colors.amber;
-                  if (states.contains(MaterialState.hovered))
-                    return Colors.red.shade400;
-                  if (states.contains(MaterialState.pressed))
-                    return Colors.blue.shade300;
-                  return null; // Defer to the widget's default.
-                }),
-              ),
-              onPressed: () async {
-                await getPairedDevices().then((_) {
-                  show('Cihaz Listesi Yenilendi!');
-                });
-              },
+        ),
+        title: Text(
+          "SanoTimer",
+          style: TextStyle(color: Colors.black, fontSize: _size.width * 0.1),
+        ),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            //aç kapa butonu
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => alertSingleDialog(
+                                    context,
+                                    'Aç/Kapa işlemi gerçekleşti',
+                                    'Tamam',
+                                  )));
+                    },
+                    child: Container(
+                      margin: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(70),
+                          color: Colors.red),
+                      height: _size.height * 0.12,
+                      child: Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: Center(
+                            child: Text(
+                          'Aç/Kapa',
+                          style: TextStyle(
+                            fontSize: _size.width * 0.05,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            //Manuel Ayarlama butonu
+            Row(
+              children: [
+                homeScreenButton(
+                    context, _size, "Manuel Ayarlama", ManuelAyarlamaScreen()),
+              ],
+            ),
+            //Tarih/Zaman ve Sulama günleri Butonları
+            Row(
+              children: [
+                //Tarih/zaman butonu
+                homeScreenButton(
+                    context, _size, "Tarih/Zaman", TarihZamanScreen()),
+                //Sulama Günleri
+                homeScreenButton(
+                    context, _size, "Sulama Günleri", SulamaGunleriScreen()),
+              ],
+            ),
+            //Sulama süresi ve Başlama zamanı süresi butonları
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                //Sulama Süresi butonu
+                homeScreenButton(
+                    context, _size, "Sulama Süresi", SulamaSuresiScreen()),
+                //Başlama zamanı butonu
+                homeScreenButton(
+                    context, _size, "Başlama Zamanı", BaslamaZamaniScreen()),
+              ],
+            ),
+            //Sıfırla ve test modu butonları
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                //Sıfırla butonu
+                homeScreenButton(
+                    context,
+                    _size,
+                    "Sıfırla",
+                    alertDobleSingle(
+                      context,
+                      'Tüm Verileriniz Sıfırlanacaktır.',
+                      'Sıfırlama işleminden emin misiniz?',
+                      'Evet',
+                      'Hayır',
+                    )),
+                //Test modu butonu
+                homeScreenButton(context, _size, "Test Modu", TestModuScreen()),
+              ],
             ),
           ],
         ),
-        body: Container(
-          child: Column(mainAxisSize: MainAxisSize.max, children: <Widget>[
-            Visibility(
-              visible: _bluetoothState == BluetoothState.STATE_TURNING_ON,
-              child: LinearProgressIndicator(
-                backgroundColor: Colors.blue.shade300,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text(
-                    'Cihaz Seç >>',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  DropdownButton(
-                    items: _getDeviceItems(),
-                    onChanged: (value) => setState(() => _device = value),
-                    value: _devicesList.isNotEmpty ? _device : null,
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(
-                    width: 200,
-                    height: 40,
-                    child: ElevatedButton.icon(
-                      onPressed: _connected ? disconnect : connect,
-                      icon: (_connected
-                          ? Icon(Icons.bluetooth_connected)
-                          : Icon(Icons.bluetooth_disabled)),
-                      label: Text(
-                        _connected ? 'Bağlantıyı Kes' : 'Bağlan',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: (_connected
-                              ? Colors.lightGreenAccent.shade400
-                              : Colors.white),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        primary: (_connected
-                            ? Colors.blue.shade300
-                            : Colors.red.shade400),
-                        onPrimary: (_connected
-                            ? Colors.lightGreenAccent.shade400
-                            : Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: TextField(
-                controller: textController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Hafızadaki Komut: {$getMesaj}',
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                //Veri yolla button
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: ElevatedButton(
-                        onPressed: () {
-                          data = textController.text;
-                          sendData(data);
-                          show(
-                              "Hafızadaki Veriniz : {$getMesaj}, Kaydedilen veriniz uygulama yeniden açıldığında gönderilecek !");
-                        },
-                        child: Text("Kaydet")),
-                  ),
-                ),
-                //Bt gönder button
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: ElevatedButton(
-                        onPressed: () {
-                          // print(getMesaj);
-
-                          if (isConnected == true) {
-                            _sendOnMessageToBluetooth();
-                            show("Cihaza > {$getMesaj} < yollandı!");
-                            print(
-                                "gömülü sisteme mevcut mesaj yollandı: {$getMesaj}");
-                          } else {
-                            //print(getMesaj);
-                            show("Bluetooth bağlantısını kontrol ediniz !!!");
-                          }
-                        },
-                        child: Text("Gönder")),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      BackData(server: _device)));
-                        },
-                        child: Text("Veri Al")),
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: <Widget>[
-                Flexible(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 16.0),
-                    child: TextField(
-                      style: const TextStyle(fontSize: 15.0),
-                      controller: textEditingController,
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Gelen Veriler',
-                        hintStyle: const TextStyle(color: Colors.grey),
-                      ),
-                      // enabled: isConnected,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ]),
-        ));
+      ),
+    );
   }
 
   List<DropdownMenuItem<BluetoothDevice>> _getDeviceItems() {
@@ -462,29 +395,6 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-/* String dataString = String.fromCharCodes(buffer);
-    int index = buffer.indexOf(13);
-    if (~index != 0) {
-      setState(() {
-        messages.add(
-          _Message(
-            1,
-            backspacesCounter > 0
-                ? _messageBuffer.substring(
-                    0, _messageBuffer.length - backspacesCounter)
-                : _messageBuffer + dataString.substring(0, index),
-          ),
-        );
-        _messageBuffer = dataString.substring(index);
-      });
-    } else {
-      _messageBuffer = (backspacesCounter > 0
-          ? _messageBuffer.substring(
-              0, _messageBuffer.length - backspacesCounter)
-          : _messageBuffer + dataString);
-    }
-  }
-// veri alma son */
   // Method to show a Snackbar,
   // taking message as the text
   Future show(
