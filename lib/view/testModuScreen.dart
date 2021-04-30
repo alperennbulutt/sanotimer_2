@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sanotimer2_5/core/BluetoothAppMin.dart';
 import 'package:sanotimer2_5/core/localDeneme/localStorage.dart';
 import 'package:sanotimer2_5/core/localDeneme/sendData.dart';
+import 'package:sanotimer2_5/main.dart';
 import 'package:sanotimer2_5/widgets/buttons/arrowBack.dart';
 
 class TestModuScreen extends StatefulWidget {
@@ -11,6 +13,7 @@ class TestModuScreen extends StatefulWidget {
 class _TestModuScreenState extends State<TestModuScreen> {
   final myController = TextEditingController();
   LocalStorage localStorage = new LocalStorage();
+  MyApp myApp = MyApp();
   String mesaj;
   String getMesaj;
   bool loading = false;
@@ -62,32 +65,72 @@ class _TestModuScreenState extends State<TestModuScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              //textfileddan gelen veriyi sendData metotuna yollanması
-                              String textFieldGet = myController.text;
-                              mesaj = "{o,$textFieldGet}";
-                              sendData(mesaj);
-                            },
-                            child: Container(
-                              margin: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(80),
-                                  color: Colors.red),
-                              height: _size.height * 0.08,
-                              width: _size.width * 0.8,
-                              child: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: Center(
-                                    child: Text(
-                                  'Kaydet ve Gönder',
-                                  style: TextStyle(
-                                    fontSize: _size.width * 0.09,
+                          Column(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  //textfileddan gelen veriyi sendData metotuna yollanması
+                                  String textFieldGet = myController.text;
+                                  mesaj = "{o,$textFieldGet}";
+
+                                  sendData(mesaj);
+                                },
+                                child: Container(
+                                  margin: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(80),
+                                      color: Colors.red),
+                                  height: _size.height * 0.08,
+                                  width: _size.width * 0.8,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5),
+                                    child: Center(
+                                        child: Text(
+                                      'Kaydet ve Gönder',
+                                      style: TextStyle(
+                                        fontSize: _size.width * 0.09,
+                                      ),
+                                    )),
                                   ),
-                                )),
+                                ),
                               ),
-                            ),
-                          ),
+
+                              //2. buton
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              BluetoothAppMin()));
+
+                                  //textfileddan gelen veriyi sendData metotuna yollanması
+                                  String textFieldGet = myController.text;
+                                  mesaj = "{o,$textFieldGet}";
+
+                                  sendData(mesaj);
+                                },
+                                child: Container(
+                                  margin: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(80),
+                                      color: Colors.red),
+                                  height: _size.height * 0.08,
+                                  width: _size.width * 0.8,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5),
+                                    child: Center(
+                                        child: Text(
+                                      'BT Bağlan',
+                                      style: TextStyle(
+                                        fontSize: _size.width * 0.09,
+                                      ),
+                                    )),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
                         ],
                       ),
                     ),

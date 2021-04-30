@@ -80,6 +80,7 @@ class _MyAppState extends State<MyApp> {
   // Define some variables, which will be required later
   List<BluetoothDevice> _devicesList = [];
   BluetoothDevice _device;
+
   bool _connected = false;
   BackData backData = new BackData();
 
@@ -88,6 +89,7 @@ class _MyAppState extends State<MyApp> {
 
   void degerAl() async {
     getMesaj = await localStorage.getData();
+    setState(() {});
   }
 
   @override
