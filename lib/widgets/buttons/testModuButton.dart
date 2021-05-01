@@ -1,7 +1,9 @@
 //homescreen's buttons
 import 'package:flutter/material.dart';
+import 'package:sanotimer2_5/view/testModuScreen.dart';
 
-Expanded homeScreenButton(BuildContext context, Size _size, String text,
+Expanded testModuButton(BuildContext context, Size _size, String text,
+    TestModuScreen testModuScreen,
     [Widget routeScreen]) {
   return Expanded(
     child: GestureDetector(
